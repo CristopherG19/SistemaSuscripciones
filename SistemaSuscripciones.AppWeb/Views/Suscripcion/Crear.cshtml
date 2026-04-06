@@ -1,0 +1,48 @@
+@model SistemaSuscripciones.Entities.Suscripcion
+
+@{
+    ViewData["Title"] = "Crear Suscripción";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Registrar Nuevo Cliente</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Crear" method="post">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Nombre Completo</label>
+                                <input asp-for="ClienteNombre" class="form-control" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Documento de Identidad</label>
+                                <input asp-for="DocumentoIdentidad" class="form-control" required />
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Plan Deseado</label>
+                                <select asp-for="PlanId" class="form-select" required>
+                                    <option value="">Seleccione el plan...</option>
+                                    <option value="1">Plan Básico (1 Mes)</option>
+                                    <option value="2">Plan Trimestral (3 Meses)</option>
+                                    <option value="3">Plan Anual (12 Meses)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">Guardar Registro</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,188 @@
+-- 1. Creación de la Base de Datos
+USE master; -- Nos movemos a master para poder borrar la otra
+GO
+
+IF EXISTS (SELECT name FROM sys.databases WHERE name = N'SistemaSuscripcionesDB')
+BEGIN
+    -- El truco mágico: ponemos la BD en modo un solo usuario y cerramos las demás conexiones
+    ALTER DATABASE SistemaSuscripcionesDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE SistemaSuscripcionesDB;
+END
+GO
+CREATE DATABASE SistemaSuscripcionesDB;
+GO
+
+-- 2. Seleccionar la base de datos recién creada
+USE SistemaSuscripcionesDB;
+GO
+
+
+-- ==========================================
+-- SECCIÓN 1: CREACIÓN DE TABLAS
+-- ==========================================
+
+-- 3. Creación de la tabla Planes (Catálogo)
+CREATE TABLE Planes (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Nombre NVARCHAR(50) NOT NULL,
+    Precio DECIMAL(10,2) NOT NULL,
+    DuracionMeses INT NOT NULL
+);
+GO
+
+-- 4. Creación de la tabla Suscripciones (Transaccional)
+CREATE TABLE Suscripciones (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    ClienteNombre NVARCHAR(100) NOT NULL,
+    DocumentoIdentidad NVARCHAR(15) NOT NULL,
+    PlanId INT NOT NULL,
+    FechaInicio DATETIME NOT NULL,
+    FechaFin DATETIME NOT NULL,
+    Estado NVARCHAR(20) NOT NULL,
+    FOREIGN KEY (PlanId) REFERENCES Planes(Id)
+);
+GO
+
+-- 5. Creación de la tabla Usuarios (Seguridad / Login)
+CREATE TABLE Usuarios (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    NombreCompleto NVARCHAR(100) NOT NULL,
+    Correo NVARCHAR(50) UNIQUE NOT NULL,
+    Clave NVARCHAR(50) NOT NULL, -- (Nota: En producción se recomienda encriptar)
+    Rol NVARCHAR(20) NOT NULL
+);
+GO
+
+
+-- ==========================================
+-- SECCIÓN 2: INSERCIÓN DE DATOS SEMILLA
+-- ==========================================
+
+-- 6. Inserción de Planes Iniciales
+INSERT INTO Planes (Nombre, Precio, DuracionMeses) 
+VALUES ('Plan Básico', 15.00, 1);
+
+INSERT INTO Planes (Nombre, Precio, DuracionMeses) 
+VALUES ('Plan Trimestral', 40.00, 3);
+
+INSERT INTO Planes (Nombre, Precio, DuracionMeses) 
+VALUES ('Plan Anual', 120.00, 12);
+GO
+
+-- 7. Inserción de Usuario Administrador (Prueba)
+-- He cambiado el correo para que coincida con el nombre de tu empresa (ONCYX)
+INSERT INTO Usuarios (NombreCompleto, Correo, Clave, Rol) 
+VALUES ('Administrador', 'admin@cgch.com', '123456', 'Admin');
+GO
+
+
+-- ==========================================
+-- SECCIÓN 3: PROCEDIMIENTOS ALMACENADOS
+-- ==========================================
+
+-- 8. Procedimiento: Registrar Suscripción
+CREATE PROCEDURE sp_RegistrarSuscripcion
+    @ClienteNombre NVARCHAR(100),
+    @DocumentoIdentidad NVARCHAR(15),
+    @PlanId INT,
+    @FechaInicio DATETIME,
+    @FechaFin DATETIME,
+    @Estado NVARCHAR(20)
+AS
+BEGIN
+    INSERT INTO Suscripciones (ClienteNombre, DocumentoIdentidad, PlanId, FechaInicio, FechaFin, Estado) 
+    VALUES (@ClienteNombre, @DocumentoIdentidad, @PlanId, @FechaInicio, @FechaFin, @Estado);
+END
+GO
+
+-- 9. Procedimiento: Listar Suscripciones
+CREATE PROCEDURE sp_ListarSuscripciones
+AS
+BEGIN
+    SELECT 
+        s.Id, 
+        s.ClienteNombre, 
+        s.DocumentoIdentidad, 
+        s.PlanId, 
+        s.FechaInicio, 
+        s.FechaFin, 
+        s.Estado, 
+        p.Nombre AS NombrePlan
+    FROM Suscripciones s
+    INNER JOIN Planes p ON s.PlanId = p.Id;
+END
+GO
+
+-- 10. Procedimiento: Obtener Duración de un Plan
+CREATE PROCEDURE sp_ObtenerDuracionPlan
+    @Id INT
+AS
+BEGIN
+    SELECT DuracionMeses 
+    FROM Planes 
+    WHERE Id = @Id;
+END
+GO
+
+-- 11. Procedimiento: Validar Usuario para Login
+CREATE PROCEDURE sp_ValidarUsuario
+    @Correo NVARCHAR(50),
+    @Clave NVARCHAR(50)
+AS
+BEGIN
+    SELECT Id, NombreCompleto, Correo, Rol 
+    FROM Usuarios 
+    WHERE Correo = @Correo AND Clave = @Clave;
+END
+GO
+
+---------------------------------
+USE SistemaSuscripcionesDB;
+GO
+
+-- 1. Procedimiento para obtener una suscripción específica
+CREATE PROCEDURE sp_ObtenerSuscripcionPorId
+    @Id INT
+AS
+BEGIN
+    SELECT 
+        s.Id, 
+        s.ClienteNombre, 
+        s.DocumentoIdentidad, 
+        s.PlanId, 
+        s.FechaInicio, 
+        s.FechaFin, 
+        s.Estado, 
+        p.Nombre AS NombrePlan
+    FROM Suscripciones s
+    INNER JOIN Planes p ON s.PlanId = p.Id
+    WHERE s.Id = @Id;
+END
+GO
+
+-- 2. Procedimiento para Anular (Soft Delete)
+CREATE PROCEDURE sp_AnularSuscripcion
+    @Id INT
+AS
+BEGIN
+    UPDATE Suscripciones
+    SET Estado = 'Cancelado'
+    WHERE Id = @Id;
+END
+GO
+
+-- 3. Procedimiento para Renovar (Update)
+CREATE PROCEDURE sp_RenovarSuscripcion
+    @Id INT,
+    @NuevoPlanId INT,
+    @NuevaFechaFin DATETIME
+AS
+BEGIN
+    UPDATE Suscripciones
+    SET 
+        PlanId = @NuevoPlanId,
+        FechaFin = @NuevaFechaFin,
+        Estado = 'Activo'
+    WHERE Id = @Id;
+END
+GO

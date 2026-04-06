@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SistemaSuscripciones.AppWeb/SistemaSuscripciones.AppWeb.csproj" />
+  <Project Path="SistemaSuscripciones.BusinessLogic/SistemaSuscripciones.BusinessLogic.csproj" />
+  <Project Path="SistemaSuscripciones.Data/SistemaSuscripciones.Data.csproj" />
+  <Project Path="SistemaSuscripciones.Entities/SistemaSuscripciones.Entities.csproj" />
+</Solution>

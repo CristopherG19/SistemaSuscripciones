@@ -1,0 +1,42 @@
+﻿@model SistemaSuscripciones.Entities.Suscripcion
+
+@{
+    ViewData["Title"] = "Renovar Suscripción";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark fw-bold">
+                    <h5 class="mb-0">Renovar Suscripción</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        Está a punto de renovar la suscripción de <strong>@Model.ClienteNombre</strong>
+                        (Vencimiento actual: @Model.FechaFin.ToString("dd/MM/yyyy")).
+                    </p>
+
+                    <form asp-action="Renovar" method="post">
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Seleccione el plan de renovación</label>
+                            <select asp-for="PlanId" class="form-select" required>
+                                <option value="">Seleccione el plan...</option>
+                                <option value="1">Plan Básico (1 Mes)</option>
+                                <option value="2">Plan Trimestral (3 Meses)</option>
+                                <option value="3">Plan Anual (12 Meses)</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-warning fw-bold">Confirmar Renovación</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

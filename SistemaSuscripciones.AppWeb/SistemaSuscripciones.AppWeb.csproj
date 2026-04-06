@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SistemaSuscripciones.BusinessLogic\SistemaSuscripciones.BusinessLogic.csproj" />
+    <ProjectReference Include="..\SistemaSuscripciones.Data\SistemaSuscripciones.Data.csproj" />
+    <ProjectReference Include="..\SistemaSuscripciones.Entities\SistemaSuscripciones.Entities.csproj" />
+  </ItemGroup>
+
+</Project>
