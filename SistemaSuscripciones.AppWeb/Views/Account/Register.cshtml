@@ -1,0 +1,60 @@
+@model SistemaSuscripciones.AppWeb.Models.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Registro de Usuario";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4">@ViewData["Title"]</h3>
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        @Html.ValidationSummary(true, "")
+                    </div>
+                }
+
+                <form asp-action="Register" method="post">
+                    <div class="mb-3">
+                        <label asp-for="NombreCompleto" class="form-label">Nombre Completo</label>
+                        <input asp-for="NombreCompleto" class="form-control" placeholder="Ej. Juan Pérez" />
+                        <span asp-validation-for="NombreCompleto" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Correo" class="form-label">Correo Electrónico</label>
+                        <input asp-for="Correo" class="form-control" placeholder="juan@ejemplo.com" />
+                        <span asp-validation-for="Correo" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Clave" class="form-label">Contraseña</label>
+                        <input asp-for="Clave" class="form-control" type="password" />
+                        <span asp-validation-for="Clave" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ConfirmarClave" class="form-label">Confirmar Contraseña</label>
+                        <input asp-for="ConfirmarClave" class="form-control" type="password" />
+                        <span asp-validation-for="ConfirmarClave" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">Registrarse</button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-3">
+                    <p>¿Ya tienes cuenta? <a asp-action="Login">Inicia sesión</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -5,5 +5,6 @@ namespace SistemaSuscripciones.BusinessLogic
     public interface IUsuarioService
     {
         Usuario Autenticar(string correo, string clave);
+        bool Registrar(Usuario usuario);
     }
 }

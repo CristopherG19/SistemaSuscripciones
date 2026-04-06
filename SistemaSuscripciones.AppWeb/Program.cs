@@ -11,7 +11,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Login/Index"; // Redirige aquÃ­ si intenta entrar sin loguearse
+        options.LoginPath = "/Account/Login"; // Redirige aquí si intenta entrar sin loguearse
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // La sesiÃ³n caduca en 30 min de inactividad
         options.AccessDeniedPath = "/Home/Error";
     });

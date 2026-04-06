@@ -40,9 +40,18 @@
                                 </span>
                             </li>
                             <li class="nav-item d-flex align-items-center">
-                                <form asp-controller="Login" asp-action="Salir" method="post" class="form-inline">
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="form-inline">
                                     <button type="submit" class="btn btn-outline-danger btn-sm">Cerrar Sesión</button>
                                 </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-primary" asp-controller="Account" asp-action="Login">Iniciar Sesión</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-primary btn-sm ms-2" asp-controller="Account" asp-action="Register">Regístrate</a>
                             </li>
                         }
                     </ul>

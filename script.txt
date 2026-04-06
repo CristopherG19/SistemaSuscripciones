@@ -186,3 +186,18 @@ BEGIN
     WHERE Id = @Id;
 END
 GO
+
+-- 4. Procedimiento para Registrar Usuario
+CREATE PROCEDURE sp_RegistrarUsuario
+    @NombreCompleto NVARCHAR(100),
+    @Correo NVARCHAR(50),
+    @Clave NVARCHAR(50),
+    @Rol NVARCHAR(20)
+AS
+BEGIN
+    INSERT INTO Usuarios (NombreCompleto, Correo, Clave, Rol)
+    VALUES (@NombreCompleto, @Correo, @Clave, @Rol);
+    
+    SELECT SCOPE_IDENTITY();
+END
+GO
