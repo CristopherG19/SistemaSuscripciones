@@ -17,6 +17,11 @@ namespace SistemaSuscripciones.Data
         {
             services.AddScoped<ISuscripcionRepository, SuscripcionRepository>();
             services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+            services.AddScoped<IClienteRepository, ClienteRepository>();
+            services.AddScoped<IPlanRepository, PlanRepository>();
+            services.AddScoped<IPagoRepository, PagoRepository>();
+            services.AddScoped<IDashboardRepository, DashboardRepository>();
+            services.AddScoped<IBitacoraRepository, BitacoraRepository>();
         }
     }
 }

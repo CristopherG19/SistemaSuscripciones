@@ -1,4 +1,5 @@
 using SistemaSuscripciones.AppWeb.Models;
+using SistemaSuscripciones.BusinessLogic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -8,9 +9,23 @@ namespace SistemaSuscripciones.AppWeb.Controllers
     [Authorize]
     public class HomeController : Controller
     {
+        private readonly IDashboardService _dashboardServicio;
+
+        public HomeController(IDashboardService dashboardServicio)
+        {
+            _dashboardServicio = dashboardServicio;
+        }
+
         public IActionResult Index()
         {
-            return View();
+            var viewModel = new DashboardViewModel
+            {
+                Resumen = _dashboardServicio.ObtenerResumen(),
+                ProximasAVencer = _dashboardServicio.ObtenerProximasAVencer(),
+                DistribucionPorPlan = _dashboardServicio.ObtenerDistribucion()
+            };
+
+            return View(viewModel);
         }
 
         public IActionResult Privacy()

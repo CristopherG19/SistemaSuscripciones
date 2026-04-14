@@ -1,7 +1,8 @@
-﻿@model SistemaSuscripciones.Entities.Suscripcion
+@model SistemaSuscripciones.Entities.Suscripcion
 
 @{
     ViewData["Title"] = "Renovar Suscripción";
+    var planes = ViewBag.Planes as List<SistemaSuscripciones.Entities.Plan>;
 }
 
 <div class="container mt-4">
@@ -24,9 +25,13 @@
                             <label class="form-label fw-bold">Seleccione el plan de renovación</label>
                             <select asp-for="PlanId" class="form-select" required>
                                 <option value="">Seleccione el plan...</option>
-                                <option value="1">Plan Básico (1 Mes)</option>
-                                <option value="2">Plan Trimestral (3 Meses)</option>
-                                <option value="3">Plan Anual (12 Meses)</option>
+                                @if (planes != null)
+                                {
+                                    @foreach (var plan in planes)
+                                    {
+                                        <option value="@plan.Id">@plan.Nombre (@plan.DuracionMeses @(plan.DuracionMeses == 1 ? "Mes" : "Meses") - $@plan.Precio.ToString("N2"))</option>
+                                    }
+                                }
                             </select>
                         </div>
 

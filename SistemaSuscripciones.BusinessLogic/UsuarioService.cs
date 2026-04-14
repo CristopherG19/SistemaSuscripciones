@@ -1,5 +1,7 @@
 using SistemaSuscripciones.Entities;
 using SistemaSuscripciones.Data.Infrastructure;
+using System;
+using System.Collections.Generic;
 
 namespace SistemaSuscripciones.BusinessLogic
 {
@@ -32,6 +34,32 @@ namespace SistemaSuscripciones.BusinessLogic
             
             int newId = _repositorio.RegistrarUsuario(usuario);
             return newId > 0;
+        }
+
+        public List<Usuario> ObtenerUsuarios()
+        {
+            return _repositorio.ListarTodo();
+        }
+
+        public Usuario ObtenerUsuario(int id)
+        {
+            return _repositorio.ObtenerPorId(id);
+        }
+
+        public void EditarUsuario(Usuario usuario)
+        {
+            if (string.IsNullOrWhiteSpace(usuario.NombreCompleto))
+                throw new Exception("El nombre completo es obligatorio.");
+
+            if (string.IsNullOrWhiteSpace(usuario.Correo))
+                throw new Exception("El correo es obligatorio.");
+
+            _repositorio.Editar(usuario);
+        }
+
+        public void CambiarEstadoUsuario(int id, bool activo)
+        {
+            _repositorio.CambiarEstado(id, activo);
         }
     }
 }

@@ -9,10 +9,14 @@ namespace SistemaSuscripciones.AppWeb.Controllers
     public class SuscripcionController : Controller
     {
         private readonly ISuscripcionService _servicio;
+        private readonly IPlanService _planServicio;
+        private readonly IBitacoraService _bitacoraServicio;
 
-        public SuscripcionController(ISuscripcionService servicio)
+        public SuscripcionController(ISuscripcionService servicio, IPlanService planServicio, IBitacoraService bitacoraServicio)
         {
             _servicio = servicio;
+            _planServicio = planServicio;
+            _bitacoraServicio = bitacoraServicio;
         }
 
         public IActionResult Index()
@@ -23,6 +27,7 @@ namespace SistemaSuscripciones.AppWeb.Controllers
 
         public IActionResult Crear()
         {
+            ViewBag.Planes = _planServicio.ObtenerPlanes();
             return View();
         }
 
@@ -32,21 +37,25 @@ namespace SistemaSuscripciones.AppWeb.Controllers
             try
             {
                 _servicio.GenerarSuscripcion(suscripcion);
+                _bitacoraServicio.RegistrarAccion(User.Identity.Name, "Registró suscripción", $"Cliente: {suscripcion.ClienteNombre}, Plan ID: {suscripcion.PlanId}");
+                TempData["Exito"] = "La suscripción fue registrada correctamente.";
                 return RedirectToAction(nameof(Index));
             }
-            catch
+            catch (Exception ex)
             {
+                TempData["Error"] = "Error al registrar: " + ex.Message;
+                ViewBag.Planes = _planServicio.ObtenerPlanes();
                 return View(suscripcion);
             }
         }
 
-        // POST: Anular suscripción
         [HttpPost]
         public IActionResult Anular(int id)
         {
             try
             {
                 _servicio.AnularSuscripcion(id);
+                _bitacoraServicio.RegistrarAccion(User.Identity.Name, "Anuló suscripción", $"Suscripción ID: {id}");
                 TempData["Exito"] = "La suscripción fue anulada con éxito.";
                 return RedirectToAction(nameof(Index));
             }
@@ -57,7 +66,6 @@ namespace SistemaSuscripciones.AppWeb.Controllers
             }
         }
 
-        // GET: Muestra la pantalla de renovación
         public IActionResult Renovar(int id)
         {
             var suscripcion = _servicio.ObtenerSuscripcion(id);
@@ -65,22 +73,22 @@ namespace SistemaSuscripciones.AppWeb.Controllers
             {
                 return NotFound();
             }
+            ViewBag.Planes = _planServicio.ObtenerPlanes();
             return View(suscripcion);
         }
 
-        // POST: Procesa la renovación
         [HttpPost]
         public IActionResult Renovar(int Id, int PlanId)
         {
             try
             {
                 _servicio.RenovarSuscripcion(Id, PlanId);
+                _bitacoraServicio.RegistrarAccion(User.Identity.Name, "Renovó suscripción", $"Suscripción ID: {Id}, Nuevo Plan ID: {PlanId}");
                 TempData["Exito"] = "La suscripción se renovó correctamente.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                // Usamos TempData para enviar el error a la vista Index
                 TempData["Error"] = "Hubo un problema al renovar: " + ex.Message;
                 return RedirectToAction(nameof(Index));
             }

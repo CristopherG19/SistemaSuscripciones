@@ -1,8 +1,132 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@model SistemaSuscripciones.AppWeb.Models.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container mt-4">
+    <h3 class="mb-4">Panel de Control</h3>
+
+    <!-- Tarjetas de indicadores -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Clientes</h5>
+                    <h2 class="fw-bold">@Model.Resumen.TotalClientes</h2>
+                    <small>Registrados</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Suscripciones</h5>
+                    <h2 class="fw-bold">@Model.Resumen.SuscripcionesActivas</h2>
+                    <small>Activas</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Canceladas</h5>
+                    <h2 class="fw-bold">@Model.Resumen.SuscripcionesCanceladas</h2>
+                    <small>Suscripciones</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Ingresos del Mes</h5>
+                    <h2 class="fw-bold">$@Model.Resumen.IngresosMensuales.ToString("N2")</h2>
+                    <small>Cobrado</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Próximas a vencer -->
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Suscripciones por Vencer (próximos 30 días)</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.ProximasAVencer.Any())
+                    {
+                        <table class="table table-hover table-bordered table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Plan</th>
+                                    <th>Vencimiento</th>
+                                    <th>Días Restantes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.ProximasAVencer)
+                                {
+                                    var diasRestantes = (item.FechaFin - DateTime.Now).Days;
+                                    <tr class="@(diasRestantes <= 7 ? "table-danger" : diasRestantes <= 15 ? "table-warning" : "")">
+                                        <td>@item.ClienteNombre</td>
+                                        <td>@item.NombrePlan</td>
+                                        <td>@item.FechaFin.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            <span class="badge @(diasRestantes <= 7 ? "bg-danger" : "bg-warning text-dark")">
+                                                @diasRestantes días
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center mt-3">No hay suscripciones por vencer en los próximos 30 días.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Distribución por plan -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Distribución por Plan</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.DistribucionPorPlan.Any())
+                    {
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Plan</th>
+                                    <th class="text-center">Cant.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.DistribucionPorPlan)
+                                {
+                                    <tr>
+                                        <td>@item.NombrePlan</td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary rounded-pill">@item.CantidadSuscripciones</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center mt-3">Sin datos de distribución.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

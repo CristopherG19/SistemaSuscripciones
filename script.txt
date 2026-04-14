@@ -201,3 +201,425 @@ BEGIN
     SELECT SCOPE_IDENTITY();
 END
 GO
+
+
+-- ==========================================
+-- SECCIÓN 4: MÓDULO DE CLIENTES
+-- ==========================================
+
+-- Tabla Clientes (Catálogo de clientes del sistema)
+CREATE TABLE Clientes (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Nombres NVARCHAR(60) NOT NULL,
+    Apellidos NVARCHAR(60) NOT NULL,
+    DocumentoIdentidad NVARCHAR(15) NOT NULL UNIQUE,
+    Telefono NVARCHAR(15) NULL,
+    Correo NVARCHAR(80) NULL,
+    Direccion NVARCHAR(150) NULL,
+    FechaRegistro DATETIME NOT NULL DEFAULT GETDATE(),
+    Activo BIT NOT NULL DEFAULT 1
+);
+GO
+
+-- Datos semilla para Clientes
+INSERT INTO Clientes (Nombres, Apellidos, DocumentoIdentidad, Telefono, Correo, Direccion)
+VALUES ('Carlos', 'Ramírez López', '12345678', '5551234567', 'carlos.ramirez@correo.com', 'Av. Principal #123');
+
+INSERT INTO Clientes (Nombres, Apellidos, DocumentoIdentidad, Telefono, Correo, Direccion)
+VALUES ('María', 'González Torres', '87654321', '5559876543', 'maria.gonzalez@correo.com', 'Calle Secundaria #456');
+
+INSERT INTO Clientes (Nombres, Apellidos, DocumentoIdentidad, Telefono, Correo, Direccion)
+VALUES ('Pedro', 'Hernández Díaz', '11223344', '5554445566', 'pedro.hernandez@correo.com', 'Boulevard Central #789');
+GO
+
+-- SP: Registrar un nuevo cliente
+CREATE PROCEDURE sp_RegistrarCliente
+    @Nombres NVARCHAR(60),
+    @Apellidos NVARCHAR(60),
+    @DocumentoIdentidad NVARCHAR(15),
+    @Telefono NVARCHAR(15),
+    @Correo NVARCHAR(80),
+    @Direccion NVARCHAR(150)
+AS
+BEGIN
+    INSERT INTO Clientes (Nombres, Apellidos, DocumentoIdentidad, Telefono, Correo, Direccion)
+    VALUES (@Nombres, @Apellidos, @DocumentoIdentidad, @Telefono, @Correo, @Direccion);
+END
+GO
+
+-- SP: Listar todos los clientes activos
+CREATE PROCEDURE sp_ListarClientes
+AS
+BEGIN
+    SELECT Id, Nombres, Apellidos, DocumentoIdentidad, Telefono, Correo, Direccion, FechaRegistro, Activo
+    FROM Clientes
+    WHERE Activo = 1
+    ORDER BY Apellidos, Nombres;
+END
+GO
+
+-- SP: Obtener un cliente específico por su Id
+CREATE PROCEDURE sp_ObtenerClientePorId
+    @Id INT
+AS
+BEGIN
+    SELECT Id, Nombres, Apellidos, DocumentoIdentidad, Telefono, Correo, Direccion, FechaRegistro, Activo
+    FROM Clientes
+    WHERE Id = @Id;
+END
+GO
+
+-- SP: Editar los datos de un cliente
+CREATE PROCEDURE sp_EditarCliente
+    @Id INT,
+    @Nombres NVARCHAR(60),
+    @Apellidos NVARCHAR(60),
+    @DocumentoIdentidad NVARCHAR(15),
+    @Telefono NVARCHAR(15),
+    @Correo NVARCHAR(80),
+    @Direccion NVARCHAR(150)
+AS
+BEGIN
+    UPDATE Clientes
+    SET Nombres = @Nombres,
+        Apellidos = @Apellidos,
+        DocumentoIdentidad = @DocumentoIdentidad,
+        Telefono = @Telefono,
+        Correo = @Correo,
+        Direccion = @Direccion
+    WHERE Id = @Id;
+END
+GO
+
+-- SP: Eliminar cliente (Soft Delete - cambia el estado a inactivo)
+CREATE PROCEDURE sp_EliminarCliente
+    @Id INT
+AS
+BEGIN
+    UPDATE Clientes
+    SET Activo = 0
+    WHERE Id = @Id;
+END
+GO
+
+
+-- ==========================================
+-- SECCIÓN 5: MÓDULO DE PLANES (CRUD)
+-- ==========================================
+
+-- SP: Listar todos los planes disponibles
+CREATE PROCEDURE sp_ListarPlanes
+AS
+BEGIN
+    SELECT Id, Nombre, Precio, DuracionMeses
+    FROM Planes
+    ORDER BY Precio;
+END
+GO
+
+-- SP: Obtener un plan por su Id
+CREATE PROCEDURE sp_ObtenerPlanPorId
+    @Id INT
+AS
+BEGIN
+    SELECT Id, Nombre, Precio, DuracionMeses
+    FROM Planes
+    WHERE Id = @Id;
+END
+GO
+
+-- SP: Registrar un nuevo plan
+CREATE PROCEDURE sp_RegistrarPlan
+    @Nombre NVARCHAR(50),
+    @Precio DECIMAL(10,2),
+    @DuracionMeses INT
+AS
+BEGIN
+    INSERT INTO Planes (Nombre, Precio, DuracionMeses)
+    VALUES (@Nombre, @Precio, @DuracionMeses);
+END
+GO
+
+-- SP: Editar un plan existente
+CREATE PROCEDURE sp_EditarPlan
+    @Id INT,
+    @Nombre NVARCHAR(50),
+    @Precio DECIMAL(10,2),
+    @DuracionMeses INT
+AS
+BEGIN
+    UPDATE Planes
+    SET Nombre = @Nombre,
+        Precio = @Precio,
+        DuracionMeses = @DuracionMeses
+    WHERE Id = @Id;
+END
+GO
+
+-- SP: Eliminar un plan (solo si no tiene suscripciones asociadas)
+CREATE PROCEDURE sp_EliminarPlan
+    @Id INT
+AS
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM Suscripciones WHERE PlanId = @Id)
+    BEGIN
+        DELETE FROM Planes WHERE Id = @Id;
+    END
+    ELSE
+    BEGIN
+        RAISERROR('No se puede eliminar el plan porque tiene suscripciones asociadas.', 16, 1);
+    END
+END
+GO
+
+
+-- ==========================================
+-- SECCIÓN 6: MÓDULO DE PAGOS
+-- ==========================================
+
+-- Tabla Pagos (Registro de cobros asociados a suscripciones)
+CREATE TABLE Pagos (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    SuscripcionId INT NOT NULL,
+    Monto DECIMAL(10,2) NOT NULL,
+    FechaPago DATETIME NOT NULL DEFAULT GETDATE(),
+    MetodoPago NVARCHAR(30) NOT NULL,
+    Referencia NVARCHAR(50) NULL,
+    Observaciones NVARCHAR(200) NULL,
+    FOREIGN KEY (SuscripcionId) REFERENCES Suscripciones(Id)
+);
+GO
+
+-- SP: Registrar un pago
+CREATE PROCEDURE sp_RegistrarPago
+    @SuscripcionId INT,
+    @Monto DECIMAL(10,2),
+    @FechaPago DATETIME,
+    @MetodoPago NVARCHAR(30),
+    @Referencia NVARCHAR(50),
+    @Observaciones NVARCHAR(200)
+AS
+BEGIN
+    INSERT INTO Pagos (SuscripcionId, Monto, FechaPago, MetodoPago, Referencia, Observaciones)
+    VALUES (@SuscripcionId, @Monto, @FechaPago, @MetodoPago, @Referencia, @Observaciones);
+END
+GO
+
+-- SP: Listar todos los pagos con datos de la suscripción
+CREATE PROCEDURE sp_ListarPagos
+AS
+BEGIN
+    SELECT 
+        pg.Id,
+        pg.SuscripcionId,
+        pg.Monto,
+        pg.FechaPago,
+        pg.MetodoPago,
+        pg.Referencia,
+        pg.Observaciones,
+        s.ClienteNombre,
+        p.Nombre AS NombrePlan
+    FROM Pagos pg
+    INNER JOIN Suscripciones s ON pg.SuscripcionId = s.Id
+    INNER JOIN Planes p ON s.PlanId = p.Id
+    ORDER BY pg.FechaPago DESC;
+END
+GO
+
+-- SP: Listar pagos de una suscripción específica
+CREATE PROCEDURE sp_ListarPagosPorSuscripcion
+    @SuscripcionId INT
+AS
+BEGIN
+    SELECT 
+        pg.Id,
+        pg.SuscripcionId,
+        pg.Monto,
+        pg.FechaPago,
+        pg.MetodoPago,
+        pg.Referencia,
+        pg.Observaciones,
+        s.ClienteNombre,
+        p.Nombre AS NombrePlan
+    FROM Pagos pg
+    INNER JOIN Suscripciones s ON pg.SuscripcionId = s.Id
+    INNER JOIN Planes p ON s.PlanId = p.Id
+    WHERE pg.SuscripcionId = @SuscripcionId
+    ORDER BY pg.FechaPago DESC;
+END
+GO
+
+-- SP: Obtener un pago por su Id
+CREATE PROCEDURE sp_ObtenerPagoPorId
+    @Id INT
+AS
+BEGIN
+    SELECT 
+        pg.Id,
+        pg.SuscripcionId,
+        pg.Monto,
+        pg.FechaPago,
+        pg.MetodoPago,
+        pg.Referencia,
+        pg.Observaciones,
+        s.ClienteNombre,
+        p.Nombre AS NombrePlan
+    FROM Pagos pg
+    INNER JOIN Suscripciones s ON pg.SuscripcionId = s.Id
+    INNER JOIN Planes p ON s.PlanId = p.Id
+    WHERE pg.Id = @Id;
+END
+GO
+
+
+-- ==========================================
+-- SECCIÓN 7: DASHBOARD (Consultas de Resumen)
+-- ==========================================
+
+-- SP: Obtener los indicadores principales del dashboard
+CREATE PROCEDURE sp_ObtenerResumenDashboard
+AS
+BEGIN
+    SELECT 
+        (SELECT COUNT(*) FROM Clientes WHERE Activo = 1) AS TotalClientes,
+        (SELECT COUNT(*) FROM Suscripciones WHERE Estado = 'Activo') AS SuscripcionesActivas,
+        (SELECT COUNT(*) FROM Suscripciones WHERE Estado = 'Cancelado') AS SuscripcionesCanceladas,
+        (SELECT ISNULL(SUM(Monto), 0) FROM Pagos WHERE MONTH(FechaPago) = MONTH(GETDATE()) AND YEAR(FechaPago) = YEAR(GETDATE())) AS IngresosMensuales;
+END
+GO
+
+-- SP: Obtener suscripciones que vencen en los próximos 30 días
+CREATE PROCEDURE sp_ObtenerSuscripcionesPorVencer
+AS
+BEGIN
+    SELECT 
+        s.Id,
+        s.ClienteNombre,
+        s.DocumentoIdentidad,
+        s.PlanId,
+        s.FechaInicio,
+        s.FechaFin,
+        s.Estado,
+        p.Nombre AS NombrePlan
+    FROM Suscripciones s
+    INNER JOIN Planes p ON s.PlanId = p.Id
+    WHERE s.Estado = 'Activo' 
+      AND s.FechaFin BETWEEN GETDATE() AND DATEADD(DAY, 30, GETDATE())
+    ORDER BY s.FechaFin ASC;
+END
+GO
+
+-- SP: Obtener distribución de suscripciones activas por plan
+CREATE PROCEDURE sp_ObtenerDistribucionPorPlan
+AS
+BEGIN
+    SELECT 
+        p.Nombre AS NombrePlan,
+        COUNT(s.Id) AS CantidadSuscripciones
+    FROM Planes p
+    LEFT JOIN Suscripciones s ON p.Id = s.PlanId AND s.Estado = 'Activo'
+    GROUP BY p.Nombre
+    ORDER BY CantidadSuscripciones DESC;
+END
+GO
+
+
+-- ==========================================
+-- SECCIÓN 8: GESTIÓN DE USUARIOS (CRUD Admin)
+-- ==========================================
+
+-- Agregar columna Activo a la tabla Usuarios
+ALTER TABLE Usuarios ADD Activo BIT NOT NULL DEFAULT 1;
+GO
+
+-- SP: Listar todos los usuarios
+CREATE PROCEDURE sp_ListarUsuarios
+AS
+BEGIN
+    SELECT Id, NombreCompleto, Correo, Rol, Activo
+    FROM Usuarios
+    ORDER BY NombreCompleto;
+END
+GO
+
+-- SP: Obtener usuario por Id
+CREATE PROCEDURE sp_ObtenerUsuarioPorId
+    @Id INT
+AS
+BEGIN
+    SELECT Id, NombreCompleto, Correo, Rol, Activo
+    FROM Usuarios
+    WHERE Id = @Id;
+END
+GO
+
+-- SP: Editar datos de un usuario (sin cambiar la clave)
+CREATE PROCEDURE sp_EditarUsuario
+    @Id INT,
+    @NombreCompleto NVARCHAR(100),
+    @Correo NVARCHAR(50),
+    @Rol NVARCHAR(20)
+AS
+BEGIN
+    UPDATE Usuarios
+    SET NombreCompleto = @NombreCompleto,
+        Correo = @Correo,
+        Rol = @Rol
+    WHERE Id = @Id;
+END
+GO
+
+-- SP: Cambiar el estado activo/inactivo de un usuario
+CREATE PROCEDURE sp_CambiarEstadoUsuario
+    @Id INT,
+    @Activo BIT
+AS
+BEGIN
+    UPDATE Usuarios
+    SET Activo = @Activo
+    WHERE Id = @Id;
+END
+GO
+
+
+-- ==========================================
+-- SECCIÓN 9: BITÁCORA DE ACTIVIDAD
+-- ==========================================
+
+-- Tabla Bitacora (Registro de acciones del sistema)
+CREATE TABLE Bitacora (
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    UsuarioId INT NULL,
+    NombreUsuario NVARCHAR(100) NOT NULL,
+    Accion NVARCHAR(100) NOT NULL,
+    Detalle NVARCHAR(300) NULL,
+    FechaHora DATETIME NOT NULL DEFAULT GETDATE(),
+    FOREIGN KEY (UsuarioId) REFERENCES Usuarios(Id)
+);
+GO
+
+-- SP: Registrar una entrada en la bitácora
+CREATE PROCEDURE sp_RegistrarBitacora
+    @NombreUsuario NVARCHAR(100),
+    @Accion NVARCHAR(100),
+    @Detalle NVARCHAR(300)
+AS
+BEGIN
+    INSERT INTO Bitacora (NombreUsuario, Accion, Detalle)
+    VALUES (@NombreUsuario, @Accion, @Detalle);
+END
+GO
+
+-- SP: Listar entradas de la bitácora con filtro opcional por fechas
+CREATE PROCEDURE sp_ListarBitacora
+    @FechaDesde DATETIME = NULL,
+    @FechaHasta DATETIME = NULL
+AS
+BEGIN
+    SELECT Id, NombreUsuario, Accion, Detalle, FechaHora
+    FROM Bitacora
+    WHERE (@FechaDesde IS NULL OR FechaHora >= @FechaDesde)
+      AND (@FechaHasta IS NULL OR FechaHora <= @FechaHasta)
+    ORDER BY FechaHora DESC;
+END
+GO

@@ -23,6 +23,21 @@ builder.Services.AddScoped<ISuscripcionService, SuscripcionService>();
 // Registrar el nuevo servicio de Usuario
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
+// Registro del servicio de Clientes
+builder.Services.AddScoped<IClienteService, ClienteService>();
+
+// Registro del servicio de Planes
+builder.Services.AddScoped<IPlanService, PlanService>();
+
+// Registro del servicio de Pagos
+builder.Services.AddScoped<IPagoService, PagoService>();
+
+// Registro del servicio de Dashboard
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+
+// Registro del servicio de Bitácora
+builder.Services.AddScoped<IBitacoraService, BitacoraService>();
+
 
 // CONSTRUCCIÃ“N DE LA APLICACIÃ“N
 var app = builder.Build();
@@ -45,7 +60,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Suscripcion}/{action=Index}/{id?}")
+    pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
 app.Run();

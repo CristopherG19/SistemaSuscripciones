@@ -1,0 +1,57 @@
+@model IEnumerable<SistemaSuscripciones.Entities.Bitacora>
+
+@{
+    ViewData["Title"] = "Bitácora de Actividad";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h4 class="mb-0">Bitácora de Actividad</h4>
+        </div>
+        <div class="card-body">
+            <!-- Filtros de fecha -->
+            <form method="get" class="row mb-4 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Desde</label>
+                    <input type="date" name="fechaDesde" class="form-control" value="@ViewBag.FechaDesde" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Hasta</label>
+                    <input type="date" name="fechaHasta" class="form-control" value="@ViewBag.FechaHasta" />
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+                </div>
+            </form>
+
+            <table class="table table-hover table-bordered table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Fecha y Hora</th>
+                        <th>Usuario</th>
+                        <th>Acción</th>
+                        <th>Detalle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.FechaHora.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@item.NombreUsuario</td>
+                            <td><span class="badge bg-secondary">@item.Accion</span></td>
+                            <td>@item.Detalle</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!Model.Any())
+            {
+                <p class="text-muted text-center mt-3">No se encontraron registros en el rango seleccionado.</p>
+            }
+        </div>
+    </div>
+</div>
